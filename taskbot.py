@@ -4,14 +4,11 @@ import json
 import requests
 import time
 import urllib
-
 import sqlalchemy
+import string
 
 import db
 from db import Task
-
-TOKEN = ""
-URL = "https://api.telegram.org/bot{}/".format(TOKEN)
 
 HELP = """
  /new NOME
@@ -26,6 +23,18 @@ HELP = """
  /priority ID PRIORITY{low, medium, high}
  /help
 """
+tokenFile = "botToken.txt"
+
+
+def readTokenFile():
+    inputFile = open(tokenFile, 'r')
+    getToken = inputFile.readlines()
+
+    return getToken
+
+
+botURL = "https://api.telegram.org/bot{}/".format(readTokenFile())
+
 
 def get_url(url):
     response = requests.get(url)
@@ -38,7 +47,7 @@ def get_json_from_url(url):
     return js
 
 def get_updates(offset=None):
-    url = URL + "getUpdates?timeout=100"
+    url = botURL + "getUpdates?timeout=100"
     if offset:
         url += "&offset={}".format(offset)
     js = get_json_from_url(url)
@@ -46,7 +55,7 @@ def get_updates(offset=None):
 
 def send_message(text, chat_id, reply_markup=None):
     text = urllib.parse.quote_plus(text)
-    url = URL + "sendMessage?text={}&chat_id={}&parse_mode=Markdown".format(text, chat_id)
+    url = botURL + "sendMessage?text={}&chat_id={}&parse_mode=Markdown".format(text, chat_id)
     if reply_markup:
         url += "&reply_markup={}".format(reply_markup)
     get_url(url)
@@ -358,4 +367,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
