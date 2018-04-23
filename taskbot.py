@@ -28,8 +28,8 @@ tokenFile = "botToken.txt"
 
 def readTokenFile():
     inputFile = open(tokenFile, 'r')
-    getToken = inputFile.readlines()
-
+    getToken = inputFile.readline()
+    getToken = getToken.rstrip('\n')
     return getToken
 
 
