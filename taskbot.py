@@ -166,7 +166,8 @@ def duplicateTask(msg, chat):
 
         db.session.commit()
         send_message("New task *TODO* [[{}]] {}".format(dtask.id, dtask.name), chat)
-def taskToDo(msg, chat):
+
+def setTaskStatus(msg, chat, status):
     if not msg.isdigit():
         send_message("You must inform the task id", chat)
     else:
@@ -177,40 +178,14 @@ def taskToDo(msg, chat):
         except sqlalchemy.orm.exc.NoResultFound:
             send_message("_404_ Task {} not found x.x".format(task_id), chat)
             return
-        task.status = 'TODO'
+        if status == 'DONE':
+            task.status = 'DONE'
+        elif status == 'DOING':
+            task.status = 'DOING'
+        elif status == 'TODO':
+            task.status = 'TODO'
         db.session.commit()
-        send_message("*TODO* task [[{}]] {}".format(task.id, task.name), chat)
-
-
-def showTaskDoing(msg, chat):
-    if not msg.isdigit():
-        send_message("You must inform the task id", chat)
-    else:
-        task_id = int(msg)
-        query = db.session.query(Task).filter_by(id=task_id, chat=chat)
-        try:
-            task = query.one()
-        except sqlalchemy.orm.exc.NoResultFound:
-            send_message("_404_ Task {} not found x.x".format(task_id), chat)
-            return
-        task.status = 'DOING'
-        db.session.commit()
-        send_message("*DOING* task [[{}]] {}".format(task.id, task.name), chat)
-
-def showTaskDone(msg, chat):
-            if not msg.isdigit():
-                send_message("You must inform the task id", chat)
-            else:
-                task_id = int(msg)
-                query = db.session.query(Task).filter_by(id=task_id, chat=chat)
-                try:
-                    task = query.one()
-                except sqlalchemy.orm.exc.NoResultFound:
-                    send_message("_404_ Task {} not found x.x".format(task_id), chat)
-                    return
-                task.status = 'DONE'
-                db.session.commit()
-                send_message("*DONE* task [[{}]] {}".format(task.id, task.name), chat)
+        send_message("*{}* task [[{}]] {}".format(status, task.id, task.name), chat)
 
 def listTask(chat):
     a = ''
@@ -360,13 +335,13 @@ def handle_updates(updates):
             deleteTask(msg, chat)
 
         elif command == '/todo':
-            taskToDo(msg, chat)
+            setTaskStatus(msg, chat, 'TODO')
 
         elif command == '/doing':
+            setTaskStatus(msg, chat, 'DOING')
 
-            showTaskDoing(msg, chat)
         elif command == '/done':
-            showTaskDone(msg, chat)
+            setTaskStatus(msg, chat, 'DONE')
 
         elif command == '/list':
             listTask(chat)
