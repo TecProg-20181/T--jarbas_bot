@@ -124,6 +124,28 @@ def deleteTask (msg, chat):
         db.session.commit()
         send_message("Task [[{}]] deleted".format(task_id), chat)
 
+def listPriority(chat):
+    list_text = ''
+
+    list_text += '❗ Priority List\n'
+    list_text += 'No Priority:\n'
+    query = db.session.query(Task).filter_by(priority='', chat=chat).order_by(Task.id)
+    for task in query.all():
+        list_text += '[[{}]] {}\n'.format(task.id, task.name)
+    list_text += 'High Priority:\n'
+    query = db.session.query(Task).filter_by(priority='--> HIGH', chat=chat).order_by(Task.id)
+    for task in query.all():
+        list_text += '[[{}]] {}\n'.format(task.id, task.name)
+    list_text += 'Medium Priority:\n'
+    query = db.session.query(Task).filter_by(priority='--> MEDIUM', chat=chat).order_by(Task.id)
+    for task in query.all():
+        list_text += '[[{}]] {}\n'.format(task.id, task.name)
+    list_text += 'Low Priority:\n'
+    query = db.session.query(Task).filter_by(priority='--> LOW', chat=chat).order_by(Task.id)
+    for task in query.all():
+        list_text += '[[{}]] {}\n'.format(task.id, task.name)
+
+    send_message(list_text, chat)
 
 def renameTask(msg, chat):
     text = ''
@@ -398,6 +420,9 @@ def handle_updates(updates):
 
         elif command == '/priority':
             setTaskPriority(msg, chat)
+
+        elif command == '/listpriority':
+            listPriority(chat)
 
         elif command == '/start':
             send_message("Welcome! Here is a list of things you can do.", chat)
