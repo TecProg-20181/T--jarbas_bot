@@ -155,17 +155,17 @@ def duplicateTask(msg, chat):
             send_message("_404_ Task {} not found x.x".format(task_id), chat)
             return
 
-        dtask = Task(chat=task.chat, name=task.name, status=task.status, dependencies=task.dependencies,
+        duplicatedTask = Task(chat=task.chat, name=task.name, status=task.status, dependencies=task.dependencies,
                      parents=task.parents, priority=task.priority, duedate=task.duedate)
-        db.session.add(dtask)
+        db.session.add(duplicatedTask)
 
-        for t in task.dependencies.split(',')[:-1]:
-            qy = db.session.query(Task).filter_by(id=int(t), chat=chat)
-            t = qy.one()
-            t.parents += '{},'.format(dtask.id)
+        for taskN in task.dependencies.split(',')[:-1]:
+            query = db.session.query(Task).filter_by(id=int(taskN), chat=chat)
+            taskN = query.one()
+            taskN.parents += '{},'.format(duplicatedTask.id)
 
         db.session.commit()
-        send_message("New task *TODO* [[{}]] {}".format(dtask.id, dtask.name), chat)
+        send_message("New task *TODO* [[{}]] {}".format(duplicatedTask.id, duplicatedTask.name), chat)
 
 def setTaskStatus(msg, chat, status):
     if not msg.isdigit():
