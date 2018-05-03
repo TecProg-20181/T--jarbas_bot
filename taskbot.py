@@ -39,10 +39,12 @@ def get_url(url):
     content = response.content.decode("utf8")
     return content
 
+
 def get_json_from_url(url):
     content = get_url(url)
     js = json.loads(content)
     return js
+
 
 def get_updates(offset=None):
     url = botURL + "getUpdates?timeout=100"
@@ -51,6 +53,7 @@ def get_updates(offset=None):
     js = get_json_from_url(url)
     return js
 
+
 def send_message(text, chat_id, reply_markup=None):
     text = urllib.parse.quote_plus(text)
     url = botURL + "sendMessage?text={}&chat_id={}&parse_mode=Markdown".format(text, chat_id)
@@ -58,12 +61,14 @@ def send_message(text, chat_id, reply_markup=None):
         url += "&reply_markup={}".format(reply_markup)
     get_url(url)
 
+
 def get_last_update_id(updates):
     update_ids = []
     for update in updates["result"]:
         update_ids.append(int(update["update_id"]))
 
     return max(update_ids)
+
 
 def deps_text(task, chat, preceed=''):
     text = ''
@@ -90,11 +95,14 @@ def deps_text(task, chat, preceed=''):
 
     return text
 
+
 def newTask(msg, chat):
     task = Task(chat=chat, name=msg, status='TODO', dependencies='', parents='', priority='')
     db.session.add(task)
     db.session.commit()
+
     send_message("New task *TODO* [[{}]] {}".format(task.id, task.name), chat)
+
 
 def deleteTask (msg, chat):
 
@@ -115,6 +123,7 @@ def deleteTask (msg, chat):
         db.session.delete(task)
         db.session.commit()
         send_message("Task [[{}]] deleted".format(task_id), chat)
+
 
 def renameTask(msg, chat):
     text = ''
@@ -143,6 +152,7 @@ def renameTask(msg, chat):
         db.session.commit()
         send_message("Task {} redefined from {} to {}".format(task_id, old_text, text), chat)
 
+
 def duplicateTask(msg, chat):
     if not msg.isdigit():
         send_message("You must inform the task id", chat)
@@ -166,6 +176,8 @@ def duplicateTask(msg, chat):
 
         db.session.commit()
         send_message("New task *TODO* [[{}]] {}".format(dtask.id, dtask.name), chat)
+
+
 def taskToDo(msg, chat):
     if not msg.isdigit():
         send_message("You must inform the task id", chat)
@@ -197,7 +209,8 @@ def showTaskDoing(msg, chat):
         db.session.commit()
         send_message("*DOING* task [[{}]] {}".format(task.id, task.name), chat)
 
-def showTaskDone(msg, chat):
+
+def moveTaskToDone(msg, chat):
             if not msg.isdigit():
                 send_message("You must inform the task id", chat)
             else:
@@ -224,7 +237,7 @@ def listTask(chat):
         elif task.status == 'DONE':
             icon = '\U00002611'
 
-        a += '[[{}]] {} {}\n'.format(task.id, icon, task.name)
+        a += '[[{}]] {} {} {}\n'.format(task.id, icon, task.name, task.priority)
         a += deps_text(task, chat)
 
     send_message(a, chat)
@@ -294,7 +307,7 @@ def listTask(chat):
 #                db.session.commit()
 #                send_message("Task {} dependencies up to date".format(task_id), chat)
 
-def showPriority(msg, chat):
+def setTaskPriority(msg, chat):
         text = ''
         if msg != '':
             if len(msg.split(' ', 1)) > 1:
@@ -320,6 +333,15 @@ def showPriority(msg, chat):
                     send_message("The priority *must be* one of the following: high, medium, low", chat)
                 else:
                     task.priority = text.lower()
+                    if text.lower() == 'high':
+                        task.priority = "--> HIGH"
+
+                    elif text.lower() == 'medium':
+                        task.priority = "--> MEDIUM"
+
+                    elif text.lower() == 'low':
+                        task.priority = "--> LOW"
+
                     send_message("*Task {}* priority has priority *{}*".format(task_id, text.lower()), chat)
             db.session.commit()
 
@@ -363,10 +385,10 @@ def handle_updates(updates):
             taskToDo(msg, chat)
 
         elif command == '/doing':
-
             showTaskDoing(msg, chat)
+
         elif command == '/done':
-            showTaskDone(msg, chat)
+            moveTaskToDone(msg. chat)
 
         elif command == '/list':
             listTask(chat)
@@ -375,7 +397,7 @@ def handle_updates(updates):
 #            showDependsOn(chat, msg)
 
         elif command == '/priority':
-            showPriority(msg, chat)
+            setTaskPriority(msg, chat)
 
         elif command == '/start':
             send_message("Welcome! Here is a list of things you can do.", chat)
