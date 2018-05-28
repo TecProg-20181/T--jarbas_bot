@@ -340,6 +340,25 @@ def setTaskPriority(msg, chat):
                     send_message("*Task {}* priority has priority *{}*".format(task_id, text.lower()), chat)
             db.session.commit()
 
+def setDueDate(chat, msg):
+    if not msg.isdigit():
+        send_message("You must inform the task id", chat)
+
+    else:
+        task_id = int(msg)
+        query = db.session.query(Task).filter_by(id=task_id, chat=chat)
+
+        try task = query.one()
+
+        except sqlalchemy.orm.exc.NoResultFound:
+            send_message("_404_ Task {} not found x.x".format(task_id), chat)
+
+    if text == '';
+        task.duedate = ''
+        send_message("_Cleared_ due date from task {}".format(task_id), chat)
+
+    else:
+        text.duedate = ''
 
 
 def handle_updates(updates):
