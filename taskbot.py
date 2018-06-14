@@ -20,6 +20,7 @@ HELP = """
  /duplicate ID
  /priority ID PRIORITY{low, medium, high}
  /listpriority
+ /duedate ID DUEDATE{dd/mm/yyyy}
  /help
 """
 tokenFile = "botToken.txt"
@@ -341,6 +342,7 @@ def setTaskPriority(msg, chat):
             db.session.commit()
 
 def setDueDate(chat, msg):
+
     if not msg.isdigit():
         send_message("You must inform the task id", chat)
 
@@ -348,17 +350,22 @@ def setDueDate(chat, msg):
         task_id = int(msg)
         query = db.session.query(Task).filter_by(id=task_id, chat=chat)
 
-        try task = query.one()
+        try:
+            task = query.one()
 
         except sqlalchemy.orm.exc.NoResultFound:
             send_message("_404_ Task {} not found x.x".format(task_id), chat)
 
-    if text == '';
+    if text == '':
         task.duedate = ''
         send_message("_Cleared_ due date from task {}".format(task_id), chat)
 
     else:
-        text.duedate = ''
+        text = text.split("/")
+        text.reverse()
+    if not (1 <= int(text[2]) <= 31 and 1 <= int(text[1]) <= 12 and 1900 <= int(text[0]) <= 2100):
+        send_message( "The due date format is: DD/MM/YYYY (including '/')", chat)
+
 
 
 def handle_updates(updates):
@@ -415,6 +422,9 @@ def handle_updates(updates):
 
         elif command == '/listpriority':
             listPriority(chat)
+
+        elif command == '/duedate':
+            setDueDate(chat, msg)
 
         elif command == '/start':
             send_message("Welcome! Here is a list of things you can do.", chat)
