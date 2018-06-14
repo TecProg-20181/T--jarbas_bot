@@ -98,11 +98,14 @@ def deps_text(task, chat, preceed=''):
 
 
 def newTask(msg, chat):
-    task = Task(chat=chat, name=msg, status='TODO', dependencies='', parents='', priority='')
-    db.session.add(task)
-    db.session.commit()
-
-    send_message("New task *TODO* [[{}]] {}".format(task.id, task.name), chat)
+    taskList = msg.split(',')
+    print('msg:{} chat:{} list:{}'.format(msg, chat, taskList))#Debug
+    for task in taskList:
+        task = task.strip()
+        task = Task(chat=chat, name=task, status='TODO', dependencies='', parents='', priority='')
+        db.session.add(task)
+        db.session.commit()
+        send_message("New task *TODO* [[{}]] {}".format(task.id, task.name), chat)
 
 
 def deleteTask (msg, chat):
