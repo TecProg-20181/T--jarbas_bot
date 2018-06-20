@@ -10,9 +10,9 @@ from db import Task
 
 HELP = """
  /new NOME, NOME...
- /todo ID
- /doing ID
- /done ID
+ /todo ID, ID...
+ /doing ID, ID...
+ /done ID, ID...
  /delete ID, ID...
  /list
  /rename ID NOME
@@ -209,24 +209,27 @@ def duplicateTask(msg, chat):
         send_message("New task *TODO* [[{}]] {}".format(duplicatedTask.id, duplicatedTask.name), chat)
 
 def setTaskStatus(msg, chat, status):
-    if not msg.isdigit():
-        send_message("You must inform the task id", chat)
-    else:
-        task_id = int(msg)
-        query = db.session.query(Task).filter_by(id=task_id, chat=chat)
-        try:
-            task = query.one()
-        except sqlalchemy.orm.exc.NoResultFound:
-            send_message("_404_ Task {} not found x.x".format(task_id), chat)
-            return
-        if status == 'DONE':
-            task.status = 'DONE'
-        elif status == 'DOING':
-            task.status = 'DOING'
-        elif status == 'TODO':
-            task.status = 'TODO'
-        db.session.commit()
-        send_message("*{}* task [[{}]] {}".format(status, task.id, task.name), chat)
+    taskList = msg.split(',')
+    for task in taskList:
+        task = task.strip()
+        if not task.isdigit():
+            send_message("You must inform the task ids", chat)
+        else:
+            task_id = int(task)
+            query = db.session.query(Task).filter_by(id=task_id, chat=chat)
+            try:
+                taskFound = query.one()
+            except sqlalchemy.orm.exc.NoResultFound:
+                send_message("_404_ Task {} not found x.x".format(task_id), chat)
+                return
+            if status == 'DONE':
+                taskFound.status = 'DONE'
+            elif status == 'DOING':
+                taskFound.status = 'DOING'
+            elif status == 'TODO':
+                taskFound.status = 'TODO'
+            db.session.commit()
+            send_message("*{}* task [[{}]] {}".format(status, taskFound.id, taskFound.name), chat)
 
 def listTask(chat):
     responseMessage = ''
