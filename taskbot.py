@@ -20,6 +20,7 @@ HELP = """
  /duplicate ID
  /priority ID PRIORITY{low, medium, high}
  /listpriority
+ /duedate ID DUEDATE{dd/mm/yyyy}
  /help
 """
 tokenFile = "botToken.txt"
@@ -40,6 +41,14 @@ def get_url(url):
     content = response.content.decode("utf8")
     return content
 
+
+def split_message(msg):
+    text = ''
+    if msg != '':
+        if len(msg.split(' ', 1)) > 1:
+            text = msg.split(' ', 1)[1]
+        msg = msg.split(' ', 1)[0]
+    return msg, text
 
 def get_json_from_url(url):
     content = get_url(url)
@@ -98,7 +107,7 @@ def deps_text(task, chat, preceed=''):
 
 
 def newTask(msg, chat):
-    task = Task(chat=chat, name=msg, status='TODO', dependencies='', parents='', priority='')
+    task = Task(chat=chat, name=msg, status='TODO', dependencies='', parents='', priority='', duedate=None)
     db.session.add(task)
     db.session.commit()
 
@@ -232,7 +241,7 @@ def listTask(chat):
         elif task.status == 'DONE':
             icon = '\U00002611'
 
-        responseMessage += '[[{}]] {} {}\n'.format(task.id, icon, task.name)
+        responseMessage += '[[{}]] {} {}\n *Due Date: {}*\n\n'.format(task.id, icon, task.name, task.duedate)
         responseMessage += deps_text(task, chat)
 
     send_message(responseMessage, chat)
@@ -340,6 +349,46 @@ def setTaskPriority(msg, chat):
                     send_message("*Task {}* priority has priority *{}*".format(task_id, text.lower()), chat)
             db.session.commit()
 
+def setDueDate(chat, msg):
+    text = ''
+    task = Task
+
+
+    if msg != '':
+        if len(msg.split(' ', 1)) > 1:
+            text = msg.split(' ', 1)[1]
+        msg = msg.split(' ', 1)[0]
+
+    if not msg.isdigit():
+        send_message("You have to inform the task id", chat)
+
+    else:
+        task_id = int(msg)
+        query = db.session.query(Task).filter_by(id=task_id, chat=chat)
+
+        try:
+            task = query.one()
+
+        except sqlalchemy.orm.exc.NoResultFound:
+            send_message("_404_ Task {} not found x.x".format(task_id), chat)
+
+    if text == '':
+        task.duedate = ''
+        send_message("_Cleared_ due date from task {}".format(task_id), chat)
+
+    else:
+        text = text.split("/")
+        text.reverse()
+    if not (1 <= int(text[2]) <= 31 and 1 <= int(text[1]) <= 12 and 1900 <= int(text[0]) <= 2100):
+        send_message( "The due date format is: *DD/MM/YYYY* (Max number day = 31, Max mouth day = 12 and Max number year = 2100 ) )", chat)
+
+    else:
+        from datetime import datetime
+        task.duedate = datetime.strptime(" ".join(text), '%Y %m %d')
+        send_message(
+            "Task {} has the due date *{}*".format(task_id, task.duedate), chat)
+
+        db.session.commit()
 
 
 def handle_updates(updates):
@@ -396,6 +445,9 @@ def handle_updates(updates):
 
         elif command == '/listpriority':
             listPriority(chat)
+
+        elif command == '/duedate':
+            setDueDate(chat, msg)
 
         elif command == '/start':
             send_message("Welcome! Here is a list of things you can do.", chat)
