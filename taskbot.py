@@ -109,24 +109,29 @@ def newTask(msg, chat):
 
 
 def deleteTask (msg, chat):
-
-    if not msg.isdigit():
-        send_message("You must inform the task id", chat)
-    else:
-        task_id = int(msg)
-        query = db.session.query(Task).filter_by(id=task_id, chat=chat)
-        try:
-            task = query.one()
-        except sqlalchemy.orm.exc.NoResultFound:
-            send_message("_404_ Task {} not found x.x".format(task_id), chat)
-            return
-        for t in task.dependencies.split(',')[:-1]:
-            qy = db.session.query(Task).filter_by(id=int(t), chat=chat)
-            t = qy.one()
-            t.parents = t.parents.replace('{},'.format(task.id), '')
-        db.session.delete(task)
-        db.session.commit()
-        send_message("Task [[{}]] deleted".format(task_id), chat)
+    taskList = msg.split(',')
+    for task in taskList:
+        task = task.strip()
+        if not task.isdigit():
+            send_message("You must inform the tasks ids", chat)
+        else:
+            taskId = int(task)
+            taskQuery = db.session.query(Task).filter_by(id=taskId, chat=chat)
+            try:
+                taskFound = taskQuery.one()
+            except sqlalchemy.orm.exc.NoResultFound:
+                send_message("_404_ Task {} not found x.x".format(taskId), chat)
+                return
+            for dependentTask in taskFound.dependencies.split(',')[:-1]:
+                dependentQuery = db.session.query(Task).filter_by(id=int(dependentTask), chat=chat)
+                try:
+                    dependentTask = dependentQuery.one()
+                    dependentTask.parents = dependentTask.parents.replace('{},'.format(taskFound.id), '')
+                except sqlalchemy.orm.exc.NoResultFound:
+                    print("Dependent task {} already deleted, continue...".format(dependentTask))
+            db.session.delete(taskFound)
+            db.session.commit()
+            send_message("Task [[{}]] deleted".format(taskId), chat)
 
 def listPriority(chat):
     list_text = ''
