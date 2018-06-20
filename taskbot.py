@@ -9,11 +9,11 @@ import db
 from db import Task
 
 HELP = """
- /new NOME
+ /new NOME, NOME...
  /todo ID
  /doing ID
  /done ID
- /delete ID
+ /delete ID, ID...
  /list
  /rename ID NOME
  /dependson ID ID...
