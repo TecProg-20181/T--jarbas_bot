@@ -24,7 +24,7 @@ HELP = """
  /help
 """
 tokenFile = "botToken.txt"
-
+loginData = "loginData.txt"
 
 def readTokenFile():
     inputFile = open(tokenFile, 'r')
@@ -32,6 +32,11 @@ def readTokenFile():
     getToken = getToken.rstrip('\n')
     return getToken
 
+def getLoginData():
+    inputFile = open(loginData, 'r')
+    getLoginData = inputFile.readline()
+    getLoginData = getLoginData.rstrip('\n')
+    return getLoginData
 
 botURL = "https://api.telegram.org/bot{}/".format(readTokenFile())
 
@@ -96,6 +101,24 @@ def deps_text(task, chat, preceed=''):
         text += line
 
     return text
+
+
+def createIssueGitHub(title, chat):
+
+    gitOwner = 'TecProg-20181'
+    gitName = 'T--jarbas_bot'
+    repoUrl = 'https://api.github.com/repos/%s/%s/issues' % (gitOwner,gitName)
+
+    sessionGitHub = requests.Session()
+    loginData = getLoginData();
+    sessionGitHub.auth = (loginData[0], loginData[1])
+
+    issueTitle = {'title': title}
+    postIssue = sessionGitHub.post(url, json.dumps(issue))
+    if postIssue.status_code == 201:
+        send_message('Issue created {0:s}'.format(title), chat)
+    else:
+        send_message('Sorry! The Issue was not created {0:s}'.format(title), chat)
 
 
 def newTask(msg, chat):
@@ -392,6 +415,7 @@ def handle_updates(updates):
 
         if command == '/new':
             newTask(msg, chat)
+            createIssueGitHub(msg, chat)
 
         elif command == '/rename':
             renameTask(msg, chat)
