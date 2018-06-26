@@ -282,11 +282,11 @@ def showDependsOn(msg, chat):
             return
 
         if text == '':
-            for i in task.dependencies.split(',')[:-1]:
-                i = int(i)
-                q = db.session.query(Task).filter_by(id=i, chat=chat)
-                t = q.one()
-                t.parents = t.parents.replace('{},'.format(task.id), '')
+            for dependentTask in task.dependencies.split(',')[:-1]:
+                dependentTask = int(dependentTask)
+                query = db.session.query(Task).filter_by(id=dependentTask, chat=chat)
+                taskFound = query.one()
+                taskFound.parents = taskFound.parents.replace('{},'.format(task.id), '')
 
             task.dependencies = ''
             send_message("Dependencies removed from task {}".format(task_id), chat)
