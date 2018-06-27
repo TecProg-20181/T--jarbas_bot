@@ -4,6 +4,7 @@ import time
 import urllib
 import sqlalchemy
 import string
+import os
 
 import db
 from db import Task
@@ -31,12 +32,6 @@ def readTokenFile():
     getToken = inputFile.readline()
     getToken = getToken.rstrip('\n')
     return getToken
-
-def getLoginData():
-    inputFile = open(loginData, 'r')
-    getLoginData = inputFile.readline()
-    getLoginData = getLoginData.rstrip('\n')
-    return getLoginData
 
 botURL = "https://api.telegram.org/bot{}/".format(readTokenFile())
 
@@ -102,8 +97,12 @@ def deps_text(task, chat, preceed=''):
 
     return text
 
+def getLoginData():
+    inputFile = open(loginData, 'r')
+    getLoginData = inputFile.read().split('\n')
+    return getLoginData
 
-def createIssueGitHub(title, chat):
+def createIssueGitHub(msg, chat):
 
     gitOwner = 'TecProg-20181'
     gitName = 'T--jarbas_bot'
@@ -113,12 +112,12 @@ def createIssueGitHub(title, chat):
     loginData = getLoginData();
     sessionGitHub.auth = (loginData[0], loginData[1])
 
-    issueTitle = {'title': title}
-    postIssue = sessionGitHub.post(url, json.dumps(issue))
+    issueTitle = {'title': msg}
+    postIssue = sessionGitHub.post(repoUrl, json.dumps(issueTitle))
     if postIssue.status_code == 201:
-        send_message('Issue created {0:s}'.format(title), chat)
+        send_message('*The issue _{0:s}_ was created on Github*'.format(msg), chat)
     else:
-        send_message('Sorry! The Issue was not created {0:s}'.format(title), chat)
+        send_message('*Sorry! The issue _*{0:s}*_ could not be created on GitHub'.format(msg), chat)
 
 
 def newTask(msg, chat):
