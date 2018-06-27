@@ -1,9 +1,9 @@
-import requests
 import time
 import urllib
 import sqlalchemy
 import string
 import os
+import requests
 
 import db
 from db import Task
