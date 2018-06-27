@@ -322,14 +322,17 @@ def showDependsOn(msg, chat):
             return
 
         if text == '':
-            for i in task.dependencies.split(',')[:-1]:
-                i = int(i)
-                q = db.session.query(Task).filter_by(id=i, chat=chat)
-                t = q.one()
-                t.parents = t.parents.replace('{},'.format(task.id), '')
+            for dependentTask in task.dependencies.split(',')[:-1]:
+                dependentTask = int(dependentTask)
+                query = db.session.query(Task).filter_by(id=dependentTask, chat=chat)
+                taskFound = query.one()
+                taskFound.parents = taskFound.parents.replace('{},'.format(task.id), '')
 
             task.dependencies = ''
             send_message("Dependencies removed from task {}".format(task_id), chat)
+        elif circularDependency(text, task_id):
+            send_message("Task {} already depends on {}".format(text, task_id), chat)
+            return
         else:
             for depid in text.split(' '):
                 if not depid.isdigit():
@@ -350,6 +353,20 @@ def showDependsOn(msg, chat):
 
         db.session.commit()
         send_message("Task {} dependencies up to date".format(task_id), chat)
+
+
+def circularDependency(taskId, dependentTaskId):
+    query = db.session.query(Task).filter_by(id=taskId)
+    try:
+        taskFound = query.one()
+        taskDependenciesList = taskFound.dependencies.split(",")
+    except sqlalchemy.orm.exc.NoResultFound:
+        send_message("_404_ Task {} not found x.x".format(taskId), chat)
+    if str(dependentTaskId) in taskDependenciesList:
+        return True
+    else:
+        return False
+
 
 
 def setTaskPriority(msg, chat):
