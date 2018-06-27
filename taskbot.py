@@ -4,6 +4,7 @@ import time
 import urllib
 import sqlalchemy
 import string
+import os
 
 import db
 from db import Task
@@ -24,14 +25,13 @@ HELP = """
  /help
 """
 tokenFile = "botToken.txt"
-
+loginData = "loginData.txt"
 
 def readTokenFile():
     inputFile = open(tokenFile, 'r')
     getToken = inputFile.readline()
     getToken = getToken.rstrip('\n')
     return getToken
-
 
 botURL = "https://api.telegram.org/bot{}/".format(readTokenFile())
 
@@ -104,6 +104,28 @@ def deps_text(task, chat, preceed=''):
         text += line
 
     return text
+
+def getLoginData():
+    inputFile = open(loginData, 'r')
+    getLoginData = inputFile.read().split('\n')
+    return getLoginData
+
+def createIssueGitHub(msg, chat):
+
+    gitOwner = 'TecProg-20181'
+    gitName = 'T--jarbas_bot'
+    repoUrl = 'https://api.github.com/repos/%s/%s/issues' % (gitOwner,gitName)
+
+    sessionGitHub = requests.Session()
+    loginData = getLoginData();
+    sessionGitHub.auth = (loginData[0], loginData[1])
+
+    issueTitle = {'title': msg}
+    postIssue = sessionGitHub.post(repoUrl, json.dumps(issueTitle))
+    if postIssue.status_code == 201:
+        send_message('*The issue _{0:s}_ was created on Github*'.format(msg), chat)
+    else:
+        send_message('*Sorry! The issue _*{0:s}*_ could not be created on GitHub'.format(msg), chat)
 
 
 def newTask(msg, chat):
@@ -443,6 +465,7 @@ def handle_updates(updates):
 
         if command == '/new':
             newTask(msg, chat)
+            createIssueGitHub(msg, chat)
 
         elif command == '/rename':
             renameTask(msg, chat)
