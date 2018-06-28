@@ -27,12 +27,14 @@ HELP = """
 tokenFile = "botToken.txt"
 loginData = "loginData.txt"
 
+
 def readTokenFile():
     """Read the bot token."""
     inputFile = open(tokenFile, 'r')
     getToken = inputFile.readline()
     getToken = getToken.rstrip('\n')
     return getToken
+
 
 botURL = "https://api.telegram.org/bot{}/".format(readTokenFile())
 
@@ -52,6 +54,7 @@ def split_message(msg):
         msg = msg.split(' ', 1)[0]
     return msg, text
 
+
 def get_json_from_url(url):
     """Get the json from url."""
     content = get_url(url)
@@ -69,7 +72,7 @@ def get_updates(offset=None):
 
 
 def send_message(text, chat_id, reply_markup=None):
-    """Read the bot's token."""
+    """Send message to user in chat."""
     text = urllib.parse.quote_plus(text)
     url = botURL + "sendMessage?text={}&chat_id={}&parse_mode=Markdown".format(text, chat_id)
     if reply_markup:
@@ -112,20 +115,22 @@ def deps_text(task, chat, preceed=''):
 
     return text
 
+
 def getLoginData():
     """Get the data to do login on git."""
     inputFile = open(loginData, 'r')
     getLoginData = inputFile.read().split('\n')
     return getLoginData
 
+
 def createIssueGitHub(msg, chat):
     """Create the issue on gitHub."""
     gitOwner = 'TecProg-20181'
     gitName = 'T--jarbas_bot'
-    repoUrl = 'https://api.github.com/repos/%s/%s/issues' % (gitOwner,gitName)
+    repoUrl = 'https://api.github.com/repos/%s/%s/issues' % (gitOwner, gitName)
 
     sessionGitHub = requests.Session()
-    loginData = getLoginData();
+    loginData = getLoginData()
     sessionGitHub.auth = (loginData[0], loginData[1])
 
     issueTitle = {'title': msg}
@@ -139,16 +144,17 @@ def createIssueGitHub(msg, chat):
 def newTask(msg, chat):
     """Create a new task."""
     taskList = msg.split(',')
-    print('msg:{} chat:{} list:{}'.format(msg, chat, taskList))#Debug
+    print('msg:{} chat:{} list:{}'.format(msg, chat, taskList))  #Debug
     for task in taskList:
         task = task.strip()
-        task = Task(chat=chat, name=task, status='TODO', dependencies='', parents='', priority='', duedate=None)
+        task = Task(chat=chat, name=task, status='TODO', dependencies='',
+                    parents='', priority='', duedate=None)
         db.session.add(task)
         db.session.commit()
         send_message("New task *TODO* [[{}]] {}".format(task.id, task.name), chat)
 
 
-def deleteTask (msg, chat):
+def deleteTask(msg, chat):
     """Delete a task."""
     taskList = msg.split(',')
     for task in taskList:
@@ -174,6 +180,7 @@ def deleteTask (msg, chat):
             db.session.commit()
             send_message("Task [[{}]] deleted".format(taskId), chat)
 
+
 def listPriority(chat):
     """List the tasks priorities."""
     list_text = ''
@@ -198,6 +205,7 @@ def listPriority(chat):
 
     send_message(list_text, chat)
 
+
 def renameTask(msg, chat):
     """Rename a task."""
     text = ''
@@ -218,7 +226,8 @@ def renameTask(msg, chat):
             return
 
         if text == '':
-            send_message("You want to modify task {}, but you didn't provide any new text".format(task_id), chat)
+            send_message(
+                "You want to modify task {}, but you didn't provide anynew text".format(task_id), chat)
             return
 
         old_text = task.name
@@ -240,8 +249,10 @@ def duplicateTask(msg, chat):
             send_message("_404_ Task {} not found x.x".format(task_id), chat)
             return
 
-        duplicatedTask = Task(chat=task.chat, name=task.name, status=task.status, dependencies=task.dependencies,
-                     parents=task.parents, priority=task.priority, duedate=task.duedate)
+        duplicatedTask = Task(chat=task.chat, name=task.name,
+                              status=task.status, dependencies=task.dependencies,
+                              parents=task.parents, priority=task.priority,
+                              duedate=task.duedate)
         db.session.add(duplicatedTask)
 
         for taskN in task.dependencies.split(',')[:-1]:
@@ -251,6 +262,7 @@ def duplicateTask(msg, chat):
 
         db.session.commit()
         send_message("New task *TODO* [[{}]] {}".format(duplicatedTask.id, duplicatedTask.name), chat)
+
 
 def setTaskStatus(msg, chat, status):
     """Set a status to the task."""
@@ -276,8 +288,9 @@ def setTaskStatus(msg, chat, status):
             db.session.commit()
             send_message("*{}* task [[{}]] {}".format(status, taskFound.id, taskFound.name), chat)
 
+
 def listTask(chat):
-    """List the tasks."""
+    """List the tasks in the database."""
     responseMessage = ''
 
     responseMessage += '\U0001F4CB Task List\n'
@@ -310,6 +323,7 @@ def listTask(chat):
         responseMessage += '[[{}]] {}\n'.format(task.id, task.name)
 
     send_message(responseMessage, chat)
+
 
 def showDependsOn(msg, chat):
     """Show the tasks dependencies."""
@@ -363,8 +377,9 @@ def showDependsOn(msg, chat):
         db.session.commit()
         send_message("Task {} dependencies up to date".format(task_id), chat)
 
+
 def circularDependency(taskId, dependentTaskId):
-    """Verify circular dependency"""
+    """Verify tha circular dependency."""
     query = db.session.query(Task).filter_by(id=taskId)
     try:
         taskFound = query.one()
@@ -375,7 +390,6 @@ def circularDependency(taskId, dependentTaskId):
         return True
     else:
         return False
-
 
 
 def setTaskPriority(msg, chat):
@@ -417,11 +431,11 @@ def setTaskPriority(msg, chat):
                     send_message("*Task {}* priority has priority *{}*".format(task_id, text.lower()), chat)
             db.session.commit()
 
+
 def setDueDate(chat, msg):
     """Ser a due date to the task."""
     text = ''
     task = Task
-
 
     if msg != '':
         if len(msg.split(' ', 1)) > 1:
@@ -449,13 +463,14 @@ def setDueDate(chat, msg):
         text = text.split("/")
         text.reverse()
     if not (1 <= int(text[2]) <= 31 and 1 <= int(text[1]) <= 12 and 1900 <= int(text[0]) <= 2100):
-        send_message( "The due date format is: *DD/MM/YYYY* (Max number day = 31, Max mouth day = 12 and Max number year = 2100 ) )", chat)
+        send_message(
+        "The due date format is: *DD/MM/YYYY* (Max number day = 31, Max mouth day = 12 and Max number year = 2100 ) )", chat)
 
     else:
         from datetime import datetime
         task.duedate = datetime.strptime(" ".join(text), '%Y %m %d')
         send_message(
-            "Task {} has the due date *{}*".format(task_id, task.duedate), chat)
+         "Task {} has the due date *{}*".format(task_id, task.duedate), chat)
 
         db.session.commit()
 
