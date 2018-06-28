@@ -125,34 +125,35 @@ def getLoginData():
 
 def createIssueGitHub(msg, chat):
     """Create the issue on gitHub."""
-    gitOwner = 'TecProg-20181'
-    gitName = 'T--jarbas_bot'
-    repoUrl = 'https://api.github.com/repos/%s/%s/issues' % (gitOwner, gitName)
+    taskList = msg.split(',')
+    for task in taskList:
+        gitOwner = 'TecProg-20181'
+        gitName = 'T--jarbas_bot'
+        repoUrl = 'https://api.github.com/repos/%s/%s/issues' % (gitOwner, gitName)
 
-    sessionGitHub = requests.Session()
-    loginData = getLoginData()
-    sessionGitHub.auth = (loginData[0], loginData[1])
+        sessionGitHub = requests.Session()
+        loginData = getLoginData()
+        sessionGitHub.auth = (loginData[0], loginData[1])
 
-    issueTitle = {'title': msg}
-    postIssue = sessionGitHub.post(repoUrl, json.dumps(issueTitle))
-    if postIssue.status_code == 201:
-        send_message('*The issue _{0:s}_ was created on Github*'.format(msg), chat)
-    else:
-        send_message('*Sorry! The issue _*{0:s}*_ could not be created on GitHub'.format(msg), chat)
+        issueTitle = task
+        newIssue = {'title': issueTitle}
+
+        postIssue = sessionGitHub.post(repoUrl, json.dumps(newIssue))
+        if postIssue.status_code == 201:
+            send_message('*The issue _{0:s}_ was created on Github*'.format(issueTitle), chat)
+        else:
+            send_message('*Sorry! The issue _*{0:s}*_ could not be created on GitHub'.format(issueTitle), chat)
 
 
 def newTask(msg, chat):
-    """Create a new task."""
     taskList = msg.split(',')
-    print('msg:{} chat:{} list:{}'.format(msg, chat, taskList))  #Debug
+    print('msg:{} chat:{} list:{}'.format(msg, chat, taskList))#Debug
     for task in taskList:
         task = task.strip()
-        task = Task(chat=chat, name=task, status='TODO', dependencies='',
-                    parents='', priority='', duedate=None)
+        task = Task(chat=chat, name=task, status='TODO', dependencies='', parents='', priority='', duedate=None)
         db.session.add(task)
         db.session.commit()
         send_message("New task *TODO* [[{}]] {}".format(task.id, task.name), chat)
-
 
 def deleteTask(msg, chat):
     """Delete a task."""
