@@ -1,3 +1,4 @@
+from contracts import contract
 import json
 import requests
 import time
@@ -27,7 +28,7 @@ HELP = """
 tokenFile = "botToken.txt"
 loginData = "loginData.txt"
 
-
+@contract(returns='str')
 def readTokenFile():
     """Read the bot token."""
     inputFile = open(tokenFile, 'r')
@@ -38,13 +39,12 @@ def readTokenFile():
 
 botURL = "https://api.telegram.org/bot{}/".format(readTokenFile())
 
-
+@contract(url='str', returns='str')
 def get_url(url):
     """Get the bot url."""
     response = requests.get(url)
     content = response.content.decode("utf8")
     return content
-
 
 def split_message(msg):
     text = ''
@@ -54,13 +54,12 @@ def split_message(msg):
         msg = msg.split(' ', 1)[0]
     return msg, text
 
-
+@contract(url='str', returns='dict[2]')
 def get_json_from_url(url):
     """Get the json from url."""
     content = get_url(url)
     js = json.loads(content)
     return js
-
 
 def get_updates(offset=None):
     """Get the updates fom url."""
@@ -70,7 +69,7 @@ def get_updates(offset=None):
     js = get_json_from_url(url)
     return js
 
-
+@contract(text='str', chat_id='int', returns='None')
 def send_message(text, chat_id, reply_markup=None):
     """Send message to user in chat."""
     text = urllib.parse.quote_plus(text)
@@ -79,7 +78,7 @@ def send_message(text, chat_id, reply_markup=None):
         url += "&reply_markup={}".format(reply_markup)
     get_url(url)
 
-
+@contract(updates='dict', returns='int,>0')
 def get_last_update_id(updates):
     """Get the id of the last update."""
     update_ids = []
@@ -88,7 +87,7 @@ def get_last_update_id(updates):
 
     return max(update_ids)
 
-
+@contract(task='*', chat='int', preceed='str', returns='str')
 def deps_text(task, chat, preceed=''):
     """Put the icon."""
     text = ''
@@ -144,7 +143,7 @@ def createIssueGitHub(msg, chat):
         else:
             send_message('*Sorry! The issue _*{0:s}*_ could not be created on GitHub'.format(issueTitle), chat)
 
-
+@contract(msg='str', chat='int', returns='None')
 def newTask(msg, chat):
     taskList = msg.split(',')
     print('msg:{} chat:{} list:{}'.format(msg, chat, taskList))#Debug
@@ -155,6 +154,7 @@ def newTask(msg, chat):
         db.session.commit()
         send_message("New task *TODO* [[{}]] {}".format(task.id, task.name), chat)
 
+@contract(msg='str', chat='int', returns='None')
 def deleteTask(msg, chat):
     """Delete a task."""
     taskList = msg.split(',')
